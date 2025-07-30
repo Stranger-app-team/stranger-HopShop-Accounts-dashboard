@@ -11,7 +11,6 @@ export default function OrderDetailsPage() {
   const [orderId, setOrderId] = useState(null);
   const [viewMode, setViewMode] = useState('card');
   const [downloading, setDownloading] = useState(false);
-  const [isUploadModalOpen, setUploadModalOpen] = useState(false);
   useEffect(() => {
     // Extract order ID from URL
     const url = window.location.pathname;
@@ -50,10 +49,6 @@ export default function OrderDetailsPage() {
     window.location.href = `/authenticated/edit-orders/${orderId}`;
   };
 
-  const handleStatusChange = (newStatus) => {
-    // Handle status change logic here
-    console.log(`Changing status to: ${newStatus}`);
-  };
 
   const getOrderTotal = () => {
     if (!orderData?.products) return 0;
@@ -401,13 +396,7 @@ const generateReceiptHTML = () => {
                 )}
               </button>
 
-                  <button
-                onClick={() => setUploadModalOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-teal-600 text-white rounded hover:bg-teal-700"
-              >
-                <UploadCloud className="w-3.5 h-3.5" />
-                Upload Receipt
-              </button>
+     
 
               {/* Edit Button for Accepted Orders */}
               {orderData.status === 'Accepted' && (
@@ -507,11 +496,7 @@ const generateReceiptHTML = () => {
                 </div>
               </div>
             </div>
-               <UploadReceiptModal
-              isOpen={isUploadModalOpen}
-              onClose={() => setUploadModalOpen(false)}
-              orderId={orderId}
-            />
+           
           </div>
 
           <div className="xl:col-span-3">
