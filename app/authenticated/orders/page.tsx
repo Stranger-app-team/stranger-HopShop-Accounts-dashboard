@@ -275,24 +275,25 @@ export default function DeliveredOrdersPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 space-x-2 text-sm whitespace-nowrap">
-                          {order.paymentStatus === 'Paid' ? (
+                          <div className="flex flex-col gap-1">
                             <button
-                              className="text-blue-700 hover:underline"
+                              className="text-blue-700 hover:underline text-left"
                               onClick={() => router.push(`/authenticated/view-orders/${order._id}`)}
                             >
                               Order Invoice
                             </button>
-                          ) : (
-                            <button
-                              className="text-blue-700 hover:underline"
-                              onClick={() => {
-                                setSelectedOrderId(order._id);
-                                setModalOpen(true);
-                              }}
-                            >
-                              Upload Receipt
-                            </button>
-                          )}
+                            {order.paymentStatus !== 'Paid' && (
+                              <button
+                                className="text-green-700 hover:underline text-left"
+                                onClick={() => {
+                                  setSelectedOrderId(order._id);
+                                  setModalOpen(true);
+                                }}
+                              >
+                                Upload Receipt
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

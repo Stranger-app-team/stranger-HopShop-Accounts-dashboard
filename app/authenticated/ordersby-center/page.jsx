@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { HiBuildingOffice, HiMagnifyingGlass } from 'react-icons/hi2';
+import UploadReceiptModal from '@/app/Components/UploadReceiptModal';
+import { useRouter } from 'next/navigation';
 
 const OrdersByCenterPage = () => {
   const [centres, setCentres] = useState([]);
@@ -11,6 +13,10 @@ const OrdersByCenterPage = () => {
   const [selectedCentre, setSelectedCentre] = useState(null);
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  
+  const router = useRouter();
 
   const getAuthToken = () => {
     if (typeof window !== 'undefined') {
@@ -61,7 +67,7 @@ const OrdersByCenterPage = () => {
       });
       if (!res.ok) throw new Error('Failed to fetch orders');
       const data = await res.json();
-      console.log('Orders fetched for centre >>>>>>>>>>>:', data);
+      
       setOrders(data?.orders || []);
     } catch (err) {
       console.error(err);
@@ -174,7 +180,7 @@ const OrdersByCenterPage = () => {
   <p className="text-sm text-slate-500">Loading orders...</p>
 ) : orders.length > 0 ? (
 <div className="overflow-x-auto">
-  <table className="min-w-[700px] w-full text-xs text-left text-gray-700">
+  <table className="w-full text-xs text-left text-gray-700">
     <thead className="bg-gray-100 h-10 text-[11px] text-gray-500 uppercase">
       <tr>
         <th className="px-3 py-2 whitespace-nowrap">Order</th>
@@ -182,6 +188,7 @@ const OrdersByCenterPage = () => {
         <th className="px-3 py-2 whitespace-nowrap">Amount</th>
         <th className="px-3 py-2 whitespace-nowrap">Status</th>
         <th className="px-3 py-2 whitespace-nowrap">Date</th>
+        <th className="px-3 py-2 whitespace-nowrap">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -206,6 +213,16 @@ const OrdersByCenterPage = () => {
           Accepted: 'bg-green-100',
           'Out for Delivery': 'bg-purple-100',
           Delivered: 'bg-emerald-100',
+        };
+
+        const paymentStatusTextColors = {
+          Paid: 'text-green-600',
+          Unpaid: 'text-red-600',
+        };
+
+        const paymentStatusBgColors = {
+          Paid: 'bg-green-100',
+          Unpaid: 'bg-red-100',
         };
 
         return (
@@ -233,10 +250,42 @@ const OrdersByCenterPage = () => {
               >
                 {order.status === 'Accepted' ? 'Received' : order.status}
               </span>
+              {order.paymentStatus && (
+                <div className="mt-1">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                      paymentStatusBgColors[order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'] || 'bg-gray-100'
+                    } ${paymentStatusTextColors[order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'] || 'text-gray-600'}`}
+                  >
+                    {order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'}
+                  </span>
+                </div>
+              )}
             </td>
             <td className="px-3 py-2 text-[11px] text-gray-500 whitespace-nowrap">
               {date} <br />
               {time}
+            </td>
+            <td className="px-3 py-2 text-[11px] whitespace-nowrap">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="text-blue-700 hover:underline text-left"
+                  onClick={() => router.push(`/authenticated/view-orders/${order._id}`)}
+                >
+                  Order Invoice
+                </button>
+                {order.status === 'Delivered' && order.paymentStatus !== 'Paid' && (
+                  <button
+                    className="text-green-700 hover:underline text-left"
+                    onClick={() => {
+                      setSelectedOrderId(order._id);
+                      setModalOpen(true);
+                    }}
+                  >
+                    Upload Receipt
+                  </button>
+                )}
+              </div>
             </td>
           </tr>
         );
@@ -258,6 +307,14 @@ const OrdersByCenterPage = () => {
           )}
         </div>
       </div>
+
+      {modalOpen && selectedOrderId && (
+        <UploadReceiptModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          orderId={selectedOrderId}
+        />
+      )}
     </div>
   );
 };
