@@ -52,12 +52,17 @@ export default function DeliveredOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  
+
   // Search and Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  
+
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [totalRangeAmount, setTotalRangeAmount] = useState(0);
+
+
   const router = useRouter();
 
   useEffect(() => {
@@ -106,7 +111,7 @@ export default function DeliveredOrdersPage() {
     if (dateFilter) {
       const today = new Date();
       let filterDate = new Date();
-      
+
       switch (dateFilter) {
         case 'today':
           filterDate.setHours(0, 0, 0, 0);
@@ -120,12 +125,25 @@ export default function DeliveredOrdersPage() {
         default:
           filterDate = new Date(0);
       }
-      
+
       filtered = filtered.filter((order) => new Date(order.createdAt) >= filterDate);
     }
+    // NEW: Date range filter (ADDITIONAL LOGIC — existing logic remains)
+    if (fromDate || toDate) {
+      filtered = filtered.filter((order) => {
+        const orderTime = new Date(order.createdAt).getTime();
+        const from = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : 0;
+        const to = toDate ? new Date(toDate).setHours(23, 59, 59, 999) : Infinity;
+
+        return orderTime >= from && orderTime <= to;
+      });
+    }
+    const total = filtered.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    setTotalRangeAmount(total);
+
 
     setFilteredOrders(filtered);
-  }, [orders, searchTerm, paymentStatusFilter, dateFilter]);
+  }, [orders, searchTerm, paymentStatusFilter, dateFilter, fromDate, toDate]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -180,6 +198,19 @@ export default function DeliveredOrdersPage() {
                   <option value="month">Last 30 Days</option>
                 </select>
               </div>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              />
+
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              />
 
               {/* Clear Filters Button */}
               {hasActiveFilters && (
@@ -202,6 +233,12 @@ export default function DeliveredOrdersPage() {
                 <span className="text-teal-600 font-medium"> (filtered)</span>
               )}
             </p>
+            {(fromDate || toDate) && (
+              <span className="ml-3 text-sm font-semibold text-[#ff8624] bg-[#FFF2E0] px-2 py-1 rounded-md">
+                ₹{totalRangeAmount.toFixed(2)}
+              </span>
+            )}
+
           </div>
 
           <div className="overflow-x-auto w-full">
@@ -254,9 +291,8 @@ export default function DeliveredOrdersPage() {
                         <td className="px-4 py-3 whitespace-nowrap">₹{order.totalAmount?.toFixed(2)}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              statusBgColors[order.status] || 'bg-gray-100'
-                            } ${statusTextColors[order.status] || 'text-gray-600'}`}
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${statusBgColors[order.status] || 'bg-gray-100'
+                              } ${statusTextColors[order.status] || 'text-gray-600'}`}
                           >
                             {order.status}
                           </span>
@@ -267,9 +303,8 @@ export default function DeliveredOrdersPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              paymentStatusBgColors[order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'] || 'bg-gray-100'
-                            } ${paymentStatusTextColors[order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'] || 'text-gray-600'}`}
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${paymentStatusBgColors[order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'] || 'bg-gray-100'
+                              } ${paymentStatusTextColors[order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'] || 'text-gray-600'}`}
                           >
                             {order.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'}
                           </span>
