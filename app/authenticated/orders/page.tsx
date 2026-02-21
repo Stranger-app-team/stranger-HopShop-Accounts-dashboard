@@ -172,7 +172,7 @@ export default function DeliveredOrdersPage() {
                 />
               </div>
 
-              {/* Payment Status Filter */}
+  
               <div className="flex-shrink-0">
                 <select
                   value={paymentStatusFilter}
